@@ -2,7 +2,7 @@
 Training Phi-3-Mini-4k with ORT on-device training APIs.
 
 ## Instructions
-1. Clone [this](https://github.com/carzh/onnxruntime-genai/tree/carzh/phi-3-training-export) branch.
+1. Clone [the phi-3-training-export branch of onnxruntime-genai](https://github.com/carzh/onnxruntime-genai/tree/carzh/phi-3-training-export) branch.
 2. pip install the following:
 ```
 onnx==1.15.0
@@ -11,8 +11,8 @@ transformers
 numpy==1.24.2
 torch
 ```
-3. Run the following commands
-```
+3. Run the following commands:
+```bash
 cd onnnxruntime-genai/src/python/py/models
 python builder.py -m microsoft/Phi-3-mini-4k-instruct -o phi-3-test-with-loss-labels -p fp32 -e cpu -c phi-3-test-temp-with-loss-labels
 ```
