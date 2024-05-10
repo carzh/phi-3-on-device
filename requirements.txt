@@ -1,0 +1,8 @@
+protobuf
+bitsandbytes
+sentencepiece
+torch
+accelerate
+datasets
+tiktoken
+transformers
