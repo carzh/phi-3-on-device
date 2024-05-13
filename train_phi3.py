@@ -6,10 +6,10 @@ from datasets import load_dataset
 from functools import partial
 import time
 
-artifacts_dir = "artifacts_matmul"
+artifacts_dir = "artifacts"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
-training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx')
+training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx', device='cuda')
 optimizer = ort_api.Optimizer(artifacts_dir + '/optimizer_model.onnx', training_model)
 
 print("=" * 10)
@@ -23,7 +23,7 @@ bs=1            # batch size
 bs_eval=16      # batch size for evals
 ga_steps=16     # gradient acc. steps
 epochs=4
-max_length=2048      # samples max. length
+max_length=500      # samples max. length
 output_dir="out"
 
 tokenizer = AutoTokenizer.from_pretrained(modelpath, use_fast=False)    # fast tokenizer sometimes ignores added tokens
@@ -134,8 +134,8 @@ def trainEpoch():
         # if i == 2:
         #     return
 
-trainEpoch()
-
-CheckpointState.save_checkpoint(state, "saved_training.ckpt")
+for epoch in range(epochs):
+    trainEpoch()
+    ort_api.CheckpointState.save_checkpoint(state, f"after_{epoch}_epochs.ckpt", include_optimizer_state = True)
 
 # training_model.export_model_for_inferencing("exported_model.onnx", ["logits"])
