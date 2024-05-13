@@ -24,8 +24,10 @@ onnx_model = onnx.load(onnx_model_path, load_external_data=False)
 requires_grad = [] 
 frozen_params = []
 
+matches = ["layers.32", "lm_head", "model.layers.31.mlp"]
+
 for param in onnx_model.graph.initializer:
-    if "layers.32" in param.name:
+    if any(match in param.name for match in matches):
         print(param.name)
         requires_grad.append(param.name)
     else:
@@ -34,7 +36,7 @@ artifacts.generate_artifacts(
     onnx_model,
     requires_grad=requires_grad,
     frozen_params=frozen_params,
-    artifact_directory="artifacts",
+    artifact_directory="artifacts_matmul",
     optimizer=artifacts.OptimType.AdamW,
     ort_format=False,
 )
