@@ -6,9 +6,10 @@ from datasets import load_dataset
 from functools import partial
 import time
 
-artifacts_dir = "artifacts"
+artifacts_dir = "artifacts_no_batchsize"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
+# state = ort_api.CheckpointState.load_checkpoint('after_5_epochs_no_bs.ckpt')
 training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx', device='cuda')
 optimizer = ort_api.Optimizer(artifacts_dir + '/optimizer_model.onnx', training_model)
 
@@ -18,19 +19,22 @@ print("=" * 10)
 
 modelpath="microsoft/Phi-3-mini-4k-instruct"
 dataset_name="g-ronimo/oasst2_top1_en"
-lr=0.00002      # learning rate
+lr=0.0000008      # learning rate
 bs=1            # batch size
 bs_eval=16      # batch size for evals
 ga_steps=16     # gradient acc. steps
 epochs=4
-max_length=500      # samples max. length
+max_length=1048      # samples max. length
 output_dir="out"
+
+optimizer.set_learning_rate(lr)
 
 tokenizer = AutoTokenizer.from_pretrained(modelpath, use_fast=False)    # fast tokenizer sometimes ignores added tokens
 
-tokenizer.add_tokens(["<|im_start|>", "<PAD>"])
-tokenizer.pad_token = "<PAD>"
-tokenizer.add_special_tokens(dict(eos_token="<|im_end|>"))
+# tokenizer.add_tokens(["<|im_start|>", "<PAD>"])
+# tokenizer.pad_token = "<PAD>"
+print("tokenizer pad token: ", tokenizer.pad_token)
+# tokenizer.add_special_tokens(dict(eos_token="<|im_end|>"))
 
 # Load Dataset
 # dataset = load_dataset(dataset_name, download_mode="force_redownload")
@@ -39,8 +43,8 @@ dataset = dataset["train"].train_test_split(test_size=0.1)
 
 # chatML Template and tokenize dataset
 templates=[
-    "<|im_start|>assistant\n{msg}<|im_end|>",
-    "<|im_start|>user\n{msg}<|im_end|>"
+    "<|assistant|>\n{msg}<|end|>\n",
+    "<|user|>\n{msg}<|end|>\n"
 ]
 IGNORE_INDEX=-100
 
@@ -116,7 +120,6 @@ def trainEpoch():
     losses = []
     i = 0
     for batch in dataloader:
-        print(i, 'out of', len(dataloader))
         forward_inputs = [batch["input_ids"], batch["attention_mask"], batch["position_ids"], batch["labels"]]
 
         # print("batch_size: ", batch["input_ids"].shape[0])
@@ -127,15 +130,18 @@ def trainEpoch():
         optimizer.step()
         training_model.lazy_reset_grad()
         t1 = time.monotonic()
-        print('time taken for batch ', i, ' out of ', len(dataloader), ': ', f'{t1-t0:.5f}')
         losses.append(loss)
-        print('loss: ', loss)
+        if i % 20 == 0:
+            print(i, 'out of', len(dataloader))
+            print('time taken for batch ', i, ' out of ', len(dataloader), ': ', f'{t1-t0:.5f}')
+            print('loss: ', loss)
         i += 1
         # if i == 2:
         #     return
 
 for epoch in range(epochs):
     trainEpoch()
-    ort_api.CheckpointState.save_checkpoint(state, f"after_{epoch}_epochs.ckpt", include_optimizer_state = True)
 
-# training_model.export_model_for_inferencing("exported_model.onnx", ["logits"])
+ort_api.CheckpointState.save_checkpoint(state, f"after_4_epochs_diff_template.ckpt", include_optimizer_state = True)
+
+training_model.export_model_for_inferencing("exported_model_4_epochs.onnx", ["logits"])
