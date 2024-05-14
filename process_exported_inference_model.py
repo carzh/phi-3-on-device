@@ -22,10 +22,10 @@ for layer_id in range(num_layers):
     present_key_name = f"present.{layer_id}.key"
     present_value_name = f"present.{layer_id}.value"
 
-    past_key_tensor = onnx.helper.make_tensor_value_info(past_key_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "seq_len", head_dims])
-    past_value_tensor = onnx.helper.make_tensor_value_info(past_value_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "seq_len", head_dims])
-    present_key_tensor = onnx.helper.make_tensor_value_info(present_key_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "seq_len", head_dims])
-    present_value_tensor = onnx.helper.make_tensor_value_info(present_value_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "seq_len", head_dims])
+    past_key_tensor = onnx.helper.make_tensor_value_info(past_key_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "past_sequence_length", head_dims])
+    past_value_tensor = onnx.helper.make_tensor_value_info(past_value_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "past_sequence_length", head_dims])
+    present_key_tensor = onnx.helper.make_tensor_value_info(present_key_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "total_sequence_length", head_dims])
+    present_value_tensor = onnx.helper.make_tensor_value_info(present_value_name, onnx.TensorProto.FLOAT, ["batch_size", num_heads, "total_sequence_length", head_dims])
 
     # add new tensors to graph inputs and outputs
     model.graph.input.extend([past_key_tensor, past_value_tensor])
@@ -59,5 +59,6 @@ for layer_id in range(num_layers):
     del mha_node.output[:]
     mha_node.output.extend(new_outputs)
     print("past key values added to: ", mha_node.name)
+    print()
 
 onnx.save_model(model, "exported_model_20_epochs_with_past_key_values.onnx", save_as_external_data = True, location="exported_model_20_epochs_with_past_key_values.onnx.data")
