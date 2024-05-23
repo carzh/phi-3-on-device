@@ -5,8 +5,10 @@ import torch
 from datasets import load_dataset
 from functools import partial
 import time
+import matplotlib.pyplot as plt
+import numpy as np
 
-artifacts_dir = "artifacts_no_batchsize"
+artifacts_dir = "artifacts_kv"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
 # state = ort_api.CheckpointState.load_checkpoint('after_5_epochs_no_bs.ckpt')
@@ -19,13 +21,14 @@ print("=" * 10)
 
 modelpath="microsoft/Phi-3-mini-4k-instruct"
 dataset_name="g-ronimo/oasst2_top1_en"
-lr=0.0000008      # learning rate
+lr=0.00008      # learning rate
 bs=1            # batch size
 bs_eval=16      # batch size for evals
 ga_steps=16     # gradient acc. steps
 epochs=4
 max_length=1048      # samples max. length
 output_dir="out"
+num_layers = 32
 
 optimizer.set_learning_rate(lr)
 
@@ -33,11 +36,9 @@ tokenizer = AutoTokenizer.from_pretrained(modelpath, use_fast=False)    # fast t
 
 # tokenizer.add_tokens(["<|im_start|>", "<PAD>"])
 # tokenizer.pad_token = "<PAD>"
-print("tokenizer pad token: ", tokenizer.pad_token)
 # tokenizer.add_special_tokens(dict(eos_token="<|im_end|>"))
 
 # Load Dataset
-# dataset = load_dataset(dataset_name, download_mode="force_redownload")
 dataset = load_dataset(dataset_name)
 dataset = dataset["train"].train_test_split(test_size=0.1)
 
@@ -107,7 +108,6 @@ def collate(elements):
         "input_ids": torch.tensor( [e["input_ids"] for e in elements] ).numpy(),
         "labels": torch.tensor( [e["labels"] for e in elements] ).numpy(),
         "position_ids": torch.tensor( [e["position_ids"] for e in elements] ).numpy(),
-        # "position_ids": position_ids.numpy(),
         "attention_mask": torch.tensor( [e["attention_mask"] for e in elements] ).numpy(),
     }
 
@@ -115,33 +115,68 @@ def collate(elements):
 
 dataloader = torch.utils.data.DataLoader(dataset_tokenized["train"], batch_size=bs, shuffle=True, collate_fn = collate)
 
-def trainEpoch():
-    training_model.train()
-    losses = []
-    i = 0
-    for batch in dataloader:
-        forward_inputs = [batch["input_ids"], batch["attention_mask"], batch["position_ids"], batch["labels"]]
+losses = []
 
-        # print("batch_size: ", batch["input_ids"].shape[0])
-        # print("seq_len: ", batch["input_ids"].shape[1])
+def make_empty_kv(num_layers):
+    kvs = []
+    for i in range(num_layers):
+        # empty array of size batch_size, num_kv_heads, past_seq_length, dimension of the attn heads (kv_head_dim)
+        kvs.append(np.empty(shape=(bs, 32, 0, 96), dtype=np.float32))
+        # do it twice -- once for key, once for value
+        kvs.append(np.empty(shape=(bs, 32, 0, 96), dtype=np.float32))
+
+    return kvs
+
+def trainEpoch(losses):
+    training_model.train()
+    i = 0
+    kvs_input = make_empty_kv(num_layers)
+    for batch in dataloader:
+        # forward_inputs = [batch["input_ids"], batch["attention_mask"], batch["position_ids"], batch["labels"]] + kvs_input
+        forward_inputs = [batch["input_ids"], batch["attention_mask"], batch["position_ids"], batch["labels"]]
+        # forward_inputs = [batch["input_ids"], batch["attention_mask"], batch["labels"]] + kvs_input
+
         t0 = time.monotonic()
-        loss, _ = training_model(*forward_inputs)
-        # print('after training acll')
+        outputs = training_model(*forward_inputs)
         optimizer.step()
         training_model.lazy_reset_grad()
         t1 = time.monotonic()
+        loss = float(outputs[0])
         losses.append(loss)
-        if i % 20 == 0:
+        if loss > 10:
             print(i, 'out of', len(dataloader))
             print('time taken for batch ', i, ' out of ', len(dataloader), ': ', f'{t1-t0:.5f}')
             print('loss: ', loss)
+            # print('remaining inputs: ', etc)
+            # print()
+            # print('decoded input ids:', tokenizer.batch_decode(forward_inputs[0], skip_special_tokens=True))
+            # print('decoded labels:', tokenizer.batch_decode(forward_inputs[3], skip_special_tokens=True))
         i += 1
-        # if i == 2:
-        #     return
 
 for epoch in range(epochs):
-    trainEpoch()
+    trainEpoch(losses)
 
-ort_api.CheckpointState.save_checkpoint(state, f"after_4_epochs_diff_template.ckpt", include_optimizer_state = True)
+x = np.array(range(len(losses)))
+y = np.array(losses)
+plt.plot(x, y)
+plt.show()
+plt.savefig('lossgraph.png')
 
-training_model.export_model_for_inferencing("exported_model_4_epochs.onnx", ["logits"])
+output_names = ["logits"]
+
+def append_kv_output_list(output_names_list, num_layers):
+    key_template = "present.{num_layer}.key"
+    value_template = "present.{num_layer}.value"
+    for i in range(num_layers):
+        output_names_list.append(key_template.format(num_layer=i))
+        output_names_list.append(value_template.format(num_layer=i))
+
+append_kv_output_list(output_names, num_layers)
+
+print('exporting with this output list:')
+print(output_names)
+print()
+# ort_api.CheckpointState.save_checkpoint(state, f"after_4_epochs_diff_template.ckpt", include_optimizer_state = True)
+
+# training_model.export_model_for_inferencing("exported_model_4_epochs_kv.onnx", output_names)
+training_model.export_model_for_inferencing("exported_model_4_epochs_kv.onnx", ["logits"])

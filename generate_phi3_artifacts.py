@@ -12,6 +12,7 @@ from functools import partial
 import os
 
 onnx_model_path = "model.onnx"
+# onnx_model_path = "phi-3_l1_v100_torch_exported_training.onnx"
 # onnx_model_path = "phi3-3.8b-4k-fp32-cpu.onnx"
 # onnx_model_path = "phi3-mini-4k-instruct-cpu-int4-rtn-block-32.onnx"
 
@@ -25,6 +26,7 @@ requires_grad = []
 frozen_params = []
 
 matches = ["layers.32", "lm_head", "model.layers.31.mlp"]
+# matches = ["layers.0", "layers.32", "lm_head", "model.layers.31.mlp"]
 
 for param in onnx_model.graph.initializer:
     if any(match in param.name for match in matches):
@@ -32,11 +34,13 @@ for param in onnx_model.graph.initializer:
         requires_grad.append(param.name)
     else:
         frozen_params.append(param.name)
+        # print(param.name)
+        # requires_grad.append(param.name)
 artifacts.generate_artifacts(
     onnx_model,
     requires_grad=requires_grad,
     frozen_params=frozen_params,
-    artifact_directory="artifacts_matmul",
+    artifact_directory="artifacts_kv",
     optimizer=artifacts.OptimType.AdamW,
     ort_format=False,
 )
