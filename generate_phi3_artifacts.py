@@ -11,8 +11,7 @@ from datasets import load_dataset
 from functools import partial
 import os
 
-onnx_model_path = "model.onnx"
-# onnx_model_path = "phi-3_l1_v100_torch_exported_training.onnx"
+onnx_model_path = "torch_onnx_export_phi3.onnx"
 # onnx_model_path = "phi3-3.8b-4k-fp32-cpu.onnx"
 # onnx_model_path = "phi3-mini-4k-instruct-cpu-int4-rtn-block-32.onnx"
 
@@ -40,7 +39,7 @@ artifacts.generate_artifacts(
     onnx_model,
     requires_grad=requires_grad,
     frozen_params=frozen_params,
-    artifact_directory="artifacts_kv",
+    artifact_directory="artifacts_torch_export",
     optimizer=artifacts.OptimType.AdamW,
     ort_format=False,
 )
