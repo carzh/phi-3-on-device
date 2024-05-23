@@ -115,6 +115,7 @@ print("shape of labels", one_batch["labels"].shape)
 #         return self.model(inputs.input_ids, inputs.attention_mask, inputs.token_type_ids, labels=labels)
 
 # flat_pt_model = FlatModel(pt_model)
+
 torch.onnx.export(
     pt_model,
     # pass in None for the past key values and for the input embeds

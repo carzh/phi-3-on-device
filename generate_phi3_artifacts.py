@@ -15,12 +15,31 @@ onnx_model_path = "torch_onnx_export_phi3.onnx"
 # onnx_model_path = "phi3-3.8b-4k-fp32-cpu.onnx"
 # onnx_model_path = "phi3-mini-4k-instruct-cpu-int4-rtn-block-32.onnx"
 
+# torch_onnx_model = onnx.load(onnx_model_path)
+
+# inferenced_model = onnx.shape_inference.infer_shapes(torch_onnx_model)
+
+# print("after shape inference")
+# trilu_input_name = None
+# for node in inferenced_model.graph.node:
+#     if "Trilu" in node.name:
+#         print(node)
+#         print(node.input[0])
+#         trilu_input_name = node.input[0]
+#         break
+
+# for value_info in inferenced_model.graph.value_info:
+#     if value_info.name == trilu_input_name:
+#         print(value_info)
+    
+
 if True:
     # if valid onnx model, will load into an inference session without any error. 
     # TODO: move this check to within the generate_artifacts call
+    # validation_check = InferenceSession(inferenced_model.SerializeToString())
     validation_check = InferenceSession(onnx_model_path)
     print("Model is valid yippeee")
-onnx_model = onnx.load(onnx_model_path, load_external_data=False)
+onnx_model = onnx.load(onnx_model_path, load_external_data=True)
 requires_grad = [] 
 frozen_params = []
 
