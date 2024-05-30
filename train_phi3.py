@@ -8,7 +8,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-artifacts_dir = "artifacts_kv"
+artifacts_dir = "artifacts_torch_export"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
 # state = ort_api.CheckpointState.load_checkpoint('after_5_epochs_no_bs.ckpt')
@@ -28,7 +28,7 @@ ga_steps=16     # gradient acc. steps
 epochs=4
 max_length=1048      # samples max. length
 output_dir="out"
-num_layers = 32
+num_layers = 0
 
 optimizer.set_learning_rate(lr)
 
@@ -153,8 +153,8 @@ def trainEpoch(losses):
             # print('decoded labels:', tokenizer.batch_decode(forward_inputs[3], skip_special_tokens=True))
         i += 1
 
-for epoch in range(epochs):
-    trainEpoch(losses)
+# for epoch in range(epochs):
+    # trainEpoch(losses)
 
 x = np.array(range(len(losses)))
 y = np.array(losses)
@@ -179,4 +179,4 @@ print()
 # ort_api.CheckpointState.save_checkpoint(state, f"after_4_epochs_diff_template.ckpt", include_optimizer_state = True)
 
 # training_model.export_model_for_inferencing("exported_model_4_epochs_kv.onnx", output_names)
-training_model.export_model_for_inferencing("exported_model_4_epochs_kv.onnx", ["logits"])
+training_model.export_model_for_inferencing("exported_model_noft.onnx", ["logits"])
