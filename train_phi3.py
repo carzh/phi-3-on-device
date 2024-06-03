@@ -25,7 +25,7 @@ lr=0.00008      # learning rate
 bs=1            # batch size
 bs_eval=16      # batch size for evals
 ga_steps=16     # gradient acc. steps
-epochs=4
+epochs=3
 max_length=1048      # samples max. length
 output_dir="out"
 num_layers = 0
@@ -143,7 +143,7 @@ def trainEpoch(losses):
         t1 = time.monotonic()
         loss = float(outputs[0])
         losses.append(loss)
-        if loss > 10:
+        if i % 20 == 0:
             print(i, 'out of', len(dataloader))
             print('time taken for batch ', i, ' out of ', len(dataloader), ': ', f'{t1-t0:.5f}')
             print('loss: ', loss)
@@ -153,8 +153,8 @@ def trainEpoch(losses):
             # print('decoded labels:', tokenizer.batch_decode(forward_inputs[3], skip_special_tokens=True))
         i += 1
 
-# for epoch in range(epochs):
-    # trainEpoch(losses)
+for epoch in range(epochs):
+    trainEpoch(losses)
 
 x = np.array(range(len(losses)))
 y = np.array(losses)
