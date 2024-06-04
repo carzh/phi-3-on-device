@@ -43,7 +43,7 @@ onnx_model = onnx.load(onnx_model_path, load_external_data=True)
 requires_grad = [] 
 frozen_params = []
 
-matches = ["layers.32", "lm_head", "model.layers.31.mlp"]
+matches = ["layers.32", "lm_head", "layers.31", "layers.30"]
 # matches = ["layers.0", "layers.32", "lm_head", "model.layers.31.mlp"]
 
 for param in onnx_model.graph.initializer:
@@ -58,7 +58,8 @@ artifacts.generate_artifacts(
     onnx_model,
     requires_grad=requires_grad,
     frozen_params=frozen_params,
-    artifact_directory="artifacts_torch_export",
+    artifact_directory="artifacts_torch_export_last_two_layers",
     optimizer=artifacts.OptimType.AdamW,
     ort_format=False,
+    enable_shape_inference = False
 )

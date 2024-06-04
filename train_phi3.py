@@ -8,7 +8,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-artifacts_dir = "artifacts_torch_export"
+artifacts_dir = "artifacts_torch_export_last_two_layers"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
 # state = ort_api.CheckpointState.load_checkpoint('after_5_epochs_no_bs.ckpt')
@@ -44,8 +44,8 @@ dataset = dataset["train"].train_test_split(test_size=0.1)
 
 # chatML Template and tokenize dataset
 templates=[
-    "<|assistant|>\n{msg}<|end|>\n",
-    "<|user|>\n{msg}<|end|>\n"
+    "<|assistant|>\n{msg}<|endoftext|>\n",
+    "<|user|>\n{msg}<|endoftext|>\n"
 ]
 IGNORE_INDEX=-100
 
@@ -144,6 +144,7 @@ def trainEpoch(losses):
         loss = float(outputs[0])
         losses.append(loss)
         if i % 20 == 0:
+            # print("decoded input ids", tokenizer.batch_decode(forward_inputs[0], skip_special_tokens = True))
             print(i, 'out of', len(dataloader))
             print('time taken for batch ', i, ' out of ', len(dataloader), ': ', f'{t1-t0:.5f}')
             print('loss: ', loss)
@@ -179,4 +180,4 @@ print()
 # ort_api.CheckpointState.save_checkpoint(state, f"after_4_epochs_diff_template.ckpt", include_optimizer_state = True)
 
 # training_model.export_model_for_inferencing("exported_model_4_epochs_kv.onnx", output_names)
-training_model.export_model_for_inferencing("exported_model_noft.onnx", ["logits"])
+training_model.export_model_for_inferencing("exported_model_ft_2_layers.onnx", ["logits"])

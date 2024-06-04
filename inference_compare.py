@@ -7,41 +7,41 @@ import onnxruntime
 # prompt = "Why is the sky blue?"
 prompt = "<|user|>\nTell me a NASA joke!<|endoftext|>\n<|assistant|>\n"
 prompt = "<|user|>\nI am making mayonnaise, it was starting to thicken but now it has become runny and liquid again, is there any way to salvage it?<|endoftext|>\n<|assistant|>\n"
-prompt = "<|user|>\nWhy Aristotelian view of physics (impetus and stuff) is wrong?<|endoftext|>\n<|assistant|>\n"
+prompt = "<|user|>\nWhy Aristotelian view of physics (impetus and stuff) is wrong?<|end|>\n<|assistant|>\n"
 
 modelpath = "microsoft/Phi-3-mini-4k-instruct"
 
 max_tokens = 800
 
-# #############################################################################################################################
-# # inferencing with the transformers model (before finetuning)
-# #############################################################################################################################
+#############################################################################################################################
+# inferencing with the transformers model (before finetuning)
+#############################################################################################################################
 
-# def inference(model, tokenizer, prompt):
-#     input_ids = tokenizer(prompt, return_tensors="pt").input_ids
-#     # outputs = model.generate(input_ids, max_new_tokens=2048, do_sample=True, top_k=50, top_p=0.95, eos_token_id=model.config.eos_token_id)
-#     outputs = model.generate(input_ids, max_new_tokens=max_tokens, do_sample=True, top_k=1, eos_token_id=model.config.eos_token_id)
-#     outputs_decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-#     return outputs_decoded
+def inference(model, tokenizer, prompt):
+    input_ids = tokenizer(prompt, return_tensors="pt").input_ids
+    # outputs = model.generate(input_ids, max_new_tokens=2048, do_sample=True, top_k=50, top_p=0.95, eos_token_id=model.config.eos_token_id)
+    outputs = model.generate(input_ids, max_new_tokens=max_tokens, do_sample=True, top_k=1, eos_token_id=model.config.eos_token_id)
+    outputs_decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
+    return outputs_decoded
 
-# tokenizer = AutoTokenizer.from_pretrained(modelpath, use_fast = False)
+tokenizer = AutoTokenizer.from_pretrained(modelpath, use_fast = False)
 
-# model_before_finetune = AutoModelForCausalLM.from_pretrained(
-#     modelpath,    
-#     device_map="auto",
-#     trust_remote_code=True
-# )
+model_before_finetune = AutoModelForCausalLM.from_pretrained(
+    modelpath,    
+    device_map="auto",
+    trust_remote_code=True
+)
 
-# model_before_finetune.resize_token_embeddings(len(tokenizer))
-#      # pad_to_multiple_of=64)   # phi2 default is 64, see configuration_phi.py
-# model_before_finetune.config.eos_token_id = tokenizer.eos_token_id
+model_before_finetune.resize_token_embeddings(len(tokenizer))
+     # pad_to_multiple_of=64)   # phi2 default is 64, see configuration_phi.py
+model_before_finetune.config.eos_token_id = tokenizer.eos_token_id
 
-# outputs_before_finetuning = inference(model_before_finetune, tokenizer, prompt)
+outputs_before_finetuning = inference(model_before_finetune, tokenizer, prompt)
 
-# print()
-# for output in outputs_before_finetuning:
-#     print(output)
-#     print()
+print()
+for output in outputs_before_finetuning:
+    print(output)
+    print()
 
 #############################################################################################################################
 # # inferencing with the onnx model with genai apis (after finetuning)
@@ -99,7 +99,7 @@ print()
 print()
 print(accumulated_promptresponse)
 accumulated_ids = hf_tokenizer(accumulated_promptresponse, return_tensors = "np")['input_ids'][0].tolist()
-while accumulated_promptresponse[-1] != "<|end|>":
+while accumulated_promptresponse[-7:] != "<|end|>":
     if iter > max_tokens:
         break
     input_dict = hf_tokenizer(accumulated_promptresponse, return_tensors = "np")
