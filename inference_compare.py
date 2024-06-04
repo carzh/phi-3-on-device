@@ -55,9 +55,9 @@ def inference(onnx_model_path, tokenizer, prompt, naive_streaming):
             "position_ids": get_position_ids(torch.from_numpy(input_batch_encoding["attention_mask"]))
         }
 
-        # run returns a list of ort values, take the first one and convert to numpy array -> resulting shape = 
+        # run returns a list of numpy values, take the first one -> resulting shape = 
         # [batch_size, sequence_length, vocab_size]
-        results_np = inference_model.run(output_names, input_dict)[0].numpy()
+        results_np = inference_model.run(output_names, input_dict)[0]
         # slice into [vocab_size]
         last_token_distribution = results_np[0][-1]
 
@@ -66,10 +66,10 @@ def inference(onnx_model_path, tokenizer, prompt, naive_streaming):
 
         accumulated_prompt = hf_tokenizer.batch_decode([accumulated_ids], skip_special_tokens = True)
 
-        i += 1
+        generated_tokens += 1
 
         if naive_streaming:
-            print(hf_tokenizer.decode(next_token_id), sep = " ", end = "", flush = True)
+            print(hf_tokenizer.decode(next_token_id), " ", sep = "", end = "", flush = True)
         
     return accumulated_ids, accumulated_prompt
 
