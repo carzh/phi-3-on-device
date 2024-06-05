@@ -11,7 +11,7 @@ torch
 datasets
 matplotlib
 ```
-2. Install nightly version of ONNXRuntime Training, following the instructions from [here](https://onnxruntime.ai/getting-started) (select "On-device training" -> Platform of choice -> "Python" -> Hardware acceleration of choice -> "Nightly". Instructions from the ORT website for installing Nightly version of ONNXRuntime Training should trump the instructions below.)
+2. Install nightly version of ONNXRuntime Training, following the instructions from [here](https://onnxruntime.ai/getting-started) (select "On-device training" -> Platform of choice -> "Python" -> Hardware acceleration of choice -> "Nightly". Instructions from the ORT website should trump the instructions below.)
 ```
 python -m pip install cerberus flatbuffers h5py numpy>=1.16.6 onnx packaging protobuf sympy setuptools>=41.4.0
 pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ onnxruntime-training
