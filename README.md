@@ -2,37 +2,33 @@
 Training Phi-3-Mini-4k with ORT on-device training APIs.
 
 ## Instructions
-1. Clone [the phi-3-training-export branch of onnxruntime-genai](https://github.com/carzh/onnxruntime-genai/tree/carzh/phi-3-training-export) branch.
-2. Create a conda or py environment and pip install the following:
+1. Clone this repo & create a conda or py environment and pip install the following:
 ```
 onnx==1.15.0
-onnxruntime
 transformers
 numpy==1.24.2
 torch
+datasets
+matplotlib
 ```
-3. Run the following commands:
-```bash
-cd onnnxruntime-genai/src/python/py/models
-python builder.py -m microsoft/Phi-3-mini-4k-instruct -o phi-3-test-with-loss-labels -p fp32 -e cpu -c phi-3-test-temp-with-loss-labels
+2. Install nightly version of ONNXRuntime Training, following the instructions from [here](https://onnxruntime.ai/getting-started) (select "On-device training" -> Platform of choice -> "Python" -> Hardware acceleration of choice -> "Nightly". Instructions from the ORT website for installing Nightly version of ONNXRuntime Training should trump the instructions below.)
 ```
-4. Clone this repo.
-5. Copy the ONNX model file `phi-3-test-with-loss-labels/model.onnx` and the ONNX data file `phi-3-test-with-loss-labels/model.onnx.data` to the folder containing this repo.
-6. Create a new conda environment and run the following commands to install latest nightly ORT training package:
-```bash
 python -m pip install cerberus flatbuffers h5py numpy>=1.16.6 onnx packaging protobuf sympy setuptools>=41.4.0
 pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ onnxruntime-training
 ```
-Also pip install the following:
+3. Export the forward graph version of the model using the following script. Currently, this script will export every single model weight as a separate file, so it will generate about 100+ files.
 ```
-torch
-transformers
-datasets
-matplotlib
-ipykernel
+python torch_onnx_export.py
 ```
-7. To generate the training artifacts that includes the gradient graph, use the second conda environment. Edit `generate_phi3_artifacts.py` and check that the ONNX model name that is loaded aligns with the name of the ONNX file that you moved to this repo in step 5. Then run `python generate_phi3_artifacts.py`. 
-8. Run `python train_phi3.py`. The last step in that script exports the trained model for inferencing.
-9. We need to add kv_cache back into the model to make inferencing easier. Run `python process_exported_inference_model.py [name_of_exported_file] [new_file.onnx]`
-10. Move or copy the resulting new file and its corresponding data file (will have the form of `new_file.onnx.data`) to the `finetune_results` folder. The `finetune_results` folder contains ORT GenAI config files for phi-3 model. 
-11. Run `inference_compare.py` which will inference with the Phi-3 huggingface model, then, with the same prompt, inference with your finetuned model.
+4. Run the artifact generation script.
+```
+python generate_phi3_artifacts.py
+```
+5. Train the model! This script will also generate a .png of the loss graph as well export the model for inferencing. This exported model will consist of two parts: the .ONNX model file, and then a .ONNX.data file that will contain all the associated weights of the model.
+```
+python train_phi3.py
+```
+6. Run the inferencing script. Optionally pass in a boolean argument for if you want naive streaming.
+```
+python inference_compare.py True
+```
