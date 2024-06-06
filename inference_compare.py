@@ -7,14 +7,14 @@ import sys
 
 streaming_mode = False
 
-if len(sys.argv) > 0:
+if len(sys.argv) > 1:
     streaming_mode = bool(sys.argv[1])
     print("set streaming mode to: ", streaming_mode)
 
-prompt = "<|user|>\nWhy is the sky blue?<|endoftext|>\n<|assistant|>\n"
+# prompt = "<|user|>\nWhy is the sky blue?<|endoftext|>\n<|assistant|>\n"
 # prompt = "<|user|>\nTell me a NASA joke!<|endoftext|>\n<|assistant|>\n"
 # prompt = "<|user|>\nI am making mayonnaise, it was starting to thicken but now it has become runny and liquid again, is there any way to salvage it?<|endoftext|>\n<|assistant|>\n"
-# prompt = "<|user|>\nWhy Aristotelian view of physics (impetus and stuff) is wrong?<|end|>\n<|assistant|>\n"
+prompt = "<|user|>\nWhy Aristotelian view of physics (impetus and stuff) is wrong?<|endoftext|>\n<|assistant|>\n"
 
 modelpath = "microsoft/Phi-3-mini-4k-instruct"
 max_tokens = 800
@@ -63,7 +63,7 @@ def inference(onnx_model_path, tokenizer, prompt, naive_streaming):
         if naive_streaming:
             print(hf_tokenizer.decode(next_token_id), " ", sep = "", end = "", flush = True)
         
-    accumulated_prompt = hf_tokenizer.batch_decode([accumulated_ids], skip_special_tokens = True)
+    accumulated_prompt = hf_tokenizer.batch_decode(accumulated_ids, skip_special_tokens = True)
     return accumulated_ids, accumulated_prompt
 
 pre_ft_acc_ids, pre_ft_acc_text = inference("exported_torch_model_no_ft.onnx", hf_tokenizer, prompt, streaming_mode)
