@@ -61,7 +61,6 @@ print('attempting tokenizing dataset')
 dataset_tokenized = dataset.map(
     partial(tokenize, max_length=max_length), 
     batched=False, 
-    # num_proc=os.cpu_count(),    # multithreaded
     remove_columns=dataset["train"].column_names  # don't need this anymore, we have tokens from here on
 )
 print('after dataset_tokenized is generated yayy')
@@ -105,16 +104,6 @@ print("shape of labels", one_batch["labels"].shape)
 # =============================================================================
 # export model
 # =============================================================================
-
-# class FlatModel(torch.nn.Module):
-#     def __init__(self, model):
-#         super().__init__()
-#         self.model = model
-
-#     def forward(self, *local_inputs):
-#         return self.model(inputs.input_ids, inputs.attention_mask, inputs.token_type_ids, labels=labels)
-
-# flat_pt_model = FlatModel(pt_model)
 
 torch.onnx.export(
     pt_model,

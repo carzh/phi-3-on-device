@@ -1,6 +1,6 @@
 import onnxruntime.training.api as ort_api
 
-artifacts_dir = "artifacts_torch_export_last_two_layers"
+artifacts_dir = "artifacts"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
 # state = ort_api.CheckpointState.load_checkpoint('after_5_epochs_no_bs.ckpt')

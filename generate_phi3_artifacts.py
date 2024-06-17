@@ -37,6 +37,6 @@ artifacts.generate_artifacts(
     onnx_model,
     requires_grad=requires_grad,
     frozen_params=frozen_params,
-    artifact_directory="artifacts_torch_export_last_two_layers",
+    artifact_directory="artifacts",
     optimizer=artifacts.OptimType.AdamW,
 )

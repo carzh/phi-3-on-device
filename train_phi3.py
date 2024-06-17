@@ -8,7 +8,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-artifacts_dir = "artifacts_torch_export_last_two_layers"
+artifacts_dir = "artifacts"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
 training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx', device='cuda')
