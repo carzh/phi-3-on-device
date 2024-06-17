@@ -12,9 +12,6 @@ if len(sys.argv) > 0:
     print("set streaming mode to: ", streaming_mode)
 
 prompt = "<|user|>\nWhy is the sky blue?<|endoftext|>\n<|assistant|>\n"
-# prompt = "<|user|>\nTell me a NASA joke!<|endoftext|>\n<|assistant|>\n"
-# prompt = "<|user|>\nI am making mayonnaise, it was starting to thicken but now it has become runny and liquid again, is there any way to salvage it?<|endoftext|>\n<|assistant|>\n"
-# prompt = "<|user|>\nWhy Aristotelian view of physics (impetus and stuff) is wrong?<|end|>\n<|assistant|>\n"
 
 modelpath = "microsoft/Phi-3-mini-4k-instruct"
 max_tokens = 800
@@ -28,6 +25,14 @@ def get_position_ids(attention_mask):
     return position_ids.numpy()
 
 def inference(onnx_model_path, tokenizer, prompt, naive_streaming):
+    """
+    Greedy decode loop.
+
+    @param onnx_model_path string representing the path to the ONNX graph ready for inferencing
+    @param tokenizer HF tokenizer
+    @param prompt string
+    @param naive_streaming when set to true, prints out the results as they are being generated
+    """
     inference_model = onnxruntime.InferenceSession(onnx_model_path)
 
     next_token_id = -1
