@@ -2,6 +2,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from datasets import load_dataset
 from functools import partial
 import torch
+import onnx
+import tempfile
+import os
 
 modelpath = "microsoft/Phi-3-mini-4k-instruct"
 
@@ -105,22 +108,30 @@ print("shape of labels", one_batch["labels"].shape)
 # export model
 # =============================================================================
 
-torch.onnx.export(
-    pt_model,
-    # pass in None for the past key values and for the input embeds
-    (one_batch["input_ids"], one_batch["attention_mask"], one_batch["position_ids"], None, None, one_batch["labels"]),
-    "torch_onnx_export_phi3.onnx",
-    input_names = ["input_ids", "attention_mask", "position_ids", "labels"],
-    output_names = ["loss", "logits"],
-    dynamic_axes= {
-        "input_ids": {0: "batch_size", 1: "seq_len"},
-        "attention_mask": {0: "batch_size", 1: "seq_len"},
-        "position_ids": {0: "batch_size", 1: "seq_len"},
-        "labels": {0: "batch_size", 1: "seq_len"},
-        "logits": {0: "batch_size", 1: "seq_len"}
-    },
-    export_params = True,
-    opset_version = 17,
-    do_constant_folding = False,
-    training = torch.onnx.TrainingMode.TRAINING
-)
+cwd = os.getcwd()
+
+with tempfile.TemporaryDirectory() as tempdirname:
+    temp_onnx_path = os.path.join(tempdirname, "torch_onnx_export_phi3.onnx")
+    torch.onnx.export(
+        pt_model,
+        # pass in None for the past key values and for the input embeds
+        (one_batch["input_ids"], one_batch["attention_mask"], one_batch["position_ids"], None, None, one_batch["labels"]),
+        temp_onnx_path,
+        input_names = ["input_ids", "attention_mask", "position_ids", "labels"],
+        output_names = ["loss", "logits"],
+        dynamic_axes= {
+            "input_ids": {0: "batch_size", 1: "seq_len"},
+            "attention_mask": {0: "batch_size", 1: "seq_len"},
+            "position_ids": {0: "batch_size", 1: "seq_len"},
+            "labels": {0: "batch_size", 1: "seq_len"},
+            "logits": {0: "batch_size", 1: "seq_len"}
+        },
+        export_params = True,
+        opset_version = 17,
+        do_constant_folding = False,
+        training = torch.onnx.TrainingMode.TRAINING
+    )
+
+    phi3_onnx = onnx.load(temp_onnx_path)
+
+    onnx.save_model(phi3_onnx, os.path.join(cwd, "torch_onnx_export_phi3.onnx"), save_as_external_data=True, all_tensors_to_one_file=True, location="torch_onnx_export_phi3.onnx.data")
