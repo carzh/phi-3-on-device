@@ -16,7 +16,7 @@ matplotlib
 python -m pip install cerberus flatbuffers h5py numpy>=1.16.6 onnx packaging protobuf sympy setuptools>=41.4.0
 pip install -i https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/ORT-Nightly/pypi/simple/ onnxruntime-training
 ```
-3. Export the forward graph version of the model using the following script. Currently, this script will export every single model weight as a separate file, so it will generate about 100+ files.
+3. Export the forward graph version of the model using the following script. 
 ```bash
 python torch_onnx_export.py
 ```
