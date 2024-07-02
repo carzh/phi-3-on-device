@@ -34,7 +34,7 @@ for param in onnx_model.graph.initializer:
 # call generate_artifacts API. Since the torch_onnx_export_phi3.onnx graph
 # already has the loss node attached, no need to add a new one.
 artifacts.generate_artifacts(
-    onnx_model,
+    onnx_model_path,
     requires_grad=requires_grad,
     frozen_params=frozen_params,
     artifact_directory="artifacts",

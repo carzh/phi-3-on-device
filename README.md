@@ -2,14 +2,9 @@
 Training Phi-3-Mini-4k with ORT on-device training APIs.
 
 ## Instructions
-1. Clone this repo & create a conda or py environment and pip install the following:
+1. Clone this repo & create a conda or py environment and pip install the requirements:
 ```bash
-onnx==1.15.0
-transformers
-numpy==1.24.2
-torch
-datasets
-matplotlib
+pip install -r requirements.txt
 ```
 2. Install nightly version of ONNXRuntime Training, following the instructions from [here](https://onnxruntime.ai/getting-started) (select "On-device training" -> Platform of choice -> "Python" -> Hardware acceleration of choice -> "Nightly". Instructions from the ORT website should trump the instructions below.)
 ```bash

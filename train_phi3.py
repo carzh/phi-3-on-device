@@ -11,7 +11,7 @@ import numpy as np
 artifacts_dir = "artifacts"
 
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
-training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx', device='cuda')
+training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx', device='cpu')
 optimizer = ort_api.Optimizer(artifacts_dir + '/optimizer_model.onnx', training_model)
 
 print("=" * 10)

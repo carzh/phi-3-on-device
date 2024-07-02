@@ -1,0 +1,8 @@
+onnx==1.15.0
+sentencepiece
+accelerate
+transformers
+numpy==1.24.4
+torch
+datasets
+matplotlib
