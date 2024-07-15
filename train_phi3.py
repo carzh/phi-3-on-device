@@ -10,6 +10,10 @@ import numpy as np
 
 artifacts_dir = "artifacts"
 
+_ = input("Press enter to continue...")
+
+print("training starting")
+
 state = ort_api.CheckpointState.load_checkpoint(artifacts_dir + '/checkpoint')
 training_model = ort_api.Module(artifacts_dir + '/training_model.onnx', state, artifacts_dir + '/eval_model.onnx', device='cpu')
 optimizer = ort_api.Optimizer(artifacts_dir + '/optimizer_model.onnx', training_model)
@@ -24,7 +28,7 @@ lr=0.00008      # learning rate
 bs=1            # batch size
 bs_eval=16      # batch size for evals
 ga_steps=16     # gradient acc. steps
-epochs=3
+epochs=0
 max_length=1048      # samples max. length
 
 optimizer.set_learning_rate(lr)
@@ -126,15 +130,13 @@ def trainEpoch(losses):
             print('loss: ', loss)
         i += 1
 
+        if i > 1:
+            return
+
 for epoch in range(epochs):
     trainEpoch(losses)
 
 x = np.array(range(len(losses)))
-y = np.array(losses)
-plt.plot(x, y)
-plt.show()
-plt.savefig('lossgraph.png')
-
 output_names = ["logits"]
 
 print('exporting with this output list:')
